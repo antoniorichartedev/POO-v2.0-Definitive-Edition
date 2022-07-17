@@ -23,15 +23,20 @@ public:
 
     // Operador =, que copia una cadena en otra, destruyendo la original.
     Cadena& operator =(const Cadena& c1);
+    Cadena& operator =(const char* c2);
 
     // Función observadora que devuelve el número de caracteres de una cadena.
-    inline size_t lenght() const noexcept { return tam_; };
+    inline size_t length() const noexcept { return tam_; };
 
     // Operador +=, que nos sirve para poder concatenar dos cadenas, añadiendo al final de la primera cadena la segunda.
     Cadena& operator +=(const Cadena& c2);
 
+    // FUncion observadora que nos devuelve la cadena.
+    const char* c_str() const noexcept { return s_; };
+
     // Operador +, que nos permite concatenar dos cadenas, resultando una nueva.
-    Cadena& operator +(const Cadena& c2);
+    Cadena operator +(const Cadena& c2);
+    Cadena operator +(const Cadena& c2) const;
 
     // Operadores lógicos para comparar cadenas
     bool operator ==(const Cadena& c2);
@@ -41,9 +46,13 @@ public:
     bool operator >(const Cadena& c2);
     bool operator <(const Cadena& c2);
 
+    // Conversores.
+    operator const char* ();
+    operator const char* () const;
+
     // Operador [], que nos permitirá obtener un caracter cualquiera de la cadena con solo su índice.
-    char& operator [](size_t i) noexcept;
-    char operator [](size_t i) const;    // OJO!! FUNCIÓN OBSERVADORA.
+    char& operator [](size_t i) ;
+    const char& operator [](size_t i) const;    // OJO!! FUNCIÓN OBSERVADORA.
 
     // Función at, que hará lo mismo que el operador [], solo que tendrá en cuenta si el número del tamaño que se le pase
     // está dentro del rango de la cadena, cosa que el operador [] no hace.

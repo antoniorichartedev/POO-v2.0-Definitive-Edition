@@ -4,6 +4,7 @@
 
 
 #include "cadena.hpp"
+using namespace std;
 
 Cadena::Cadena(size_t tamanno, char s):
     tam_(tamanno)
@@ -21,15 +22,13 @@ Cadena::Cadena(size_t tamanno, char s):
     }
 
     // NOTA: pienso que se podría hacer con strcpy.
-Cadena::Cadena(const Cadena &c): tam_(c.tam_) {
-    size_t i = 0;
-    if (i < tam_){
+Cadena::Cadena(const Cadena &c): s_(new char[c.tam_ + 1]), tam_(c.tam_) {
 
         // vamos copiando carácter a carácter a la nueva cadena.
-        for (i = 0; i < tam_; i++){
+        for (size_t i = 0; i < tam_; i++){
             s_[i] = c.s_[i];
         }
-    }
+    s_[tam_] = '\0';
 }
 
 bool Cadena::operator<(const Cadena &c2) {
@@ -45,7 +44,7 @@ bool Cadena::operator<=(const Cadena &c2) {
 }
 
 bool Cadena::operator>=(const Cadena &c2) {
-    return (*this > c2);
+    return (*this > c2 || *this == c2);
 }
 
 bool Cadena::operator!=(const Cadena &c2) {
@@ -57,22 +56,22 @@ bool Cadena::operator==(const Cadena &c2) {
 }
 
 char Cadena::at(size_t i) const {
-    if (i < 0 || tam_ == 0)
-        throw out_of_range("Índice no válido");
+    if (i < 0 || i >= tam_)
+        throw std::out_of_range("Índice no válido");
     return s_[i];
 }
 
 char &Cadena::at(size_t i) {
-    if (i < 0 || i > tam_ - 1)
-        throw out_of_range("Índice no válido");
+    if (i < 0 || i >= tam_ )
+        throw std::out_of_range("Índice no válido");
     return s_[i];
 }
 
-char Cadena::operator[](size_t i) const {
+const char &Cadena::operator[](size_t i) const {
     return s_[i];
 }
 
-char &Cadena::operator[](size_t i) noexcept {
+char &Cadena::operator[](size_t i)  {
     return s_[i];
 }
 
@@ -113,19 +112,31 @@ Cadena &Cadena::operator+=(const Cadena &c2) {
     char* temporal = new char[tam_ + c2.tam_ + 1]();
 
     // copiamos la cadena primera en temporal.
-    strcpy(temporal, s_);
+    for (unsigned i = 0; i < tam_; i++){
+        temporal[i] = s_[i];
+    }
 
-    // ahora concatenamos la segunda cadena.
-    strcat(temporal, s_);
-
-    // sumamos el tamaño de la segunda cadena al de la primera cadena.
-    tam_ += c2.tam_;
+    // ahora la segunda cadena.
+    for (unsigned i = tam_; i < tam_ + c2.tam_; i++){
+        temporal[i] = c2.s_[i - tam_];
+    }
+    temporal[tam_ + c2.tam_] = '\0';
 
     // borramos la primera cadena.
     delete[] s_;
 
-    // y le asignamos la nueva cadena a s_
-    s_ = temporal;
+    // asignamos el tamaño
+    tam_ = tam_ + c2.tam_;
+
+    // le asignamos a la nueva cadena el espacio necesario para albergarla.
+    s_ = new char[tam_ + 1];
+
+    for(unsigned i = 0; i < tam_ + 1; i++){
+        s_[i] = temporal[i];
+    }
+
+    // borramos la cadena temporal que hemos creado.
+    delete[] temporal;
 
     // devolvemos esa cadena.
     return *this;
@@ -135,13 +146,13 @@ Cadena Cadena::substr(size_t ind, size_t tamanno) {
 
     // Comprobamos primero si está en un rango válido.
     if (ind < 0 || tamanno + 1 < ind){
-        throw out_of_range("Límite de rango excedido.");
+        throw std::out_of_range("Límite de rango excedido.");
     }
 
     // ahora, vamos a comprobar si los caracteres que se han pedido, se pueden mostrar, es decir, si hay suficientes caracteres.
     unsigned int caractdifncia = tam_ - ind;
     if (caractdifncia < tamanno){
-        throw out_of_range("Lo siento, no hay suficientes caracteres.");
+        throw std::out_of_range("Lo siento, no hay suficientes caracteres.");
     }
 
     // creamos una cadena nueva para albergar el resultado.
@@ -158,13 +169,13 @@ Cadena Cadena::substr(size_t ind, size_t tamanno) {
 Cadena Cadena::substr(size_t ind, size_t tamanno) const {
     // Comprobamos primero si está en un rango válido.
     if (ind < 0 || tamanno + 1 < ind){
-        throw out_of_range("Límite de rango excedido.");
+        throw std::out_of_range("Límite de rango excedido.");
     }
 
     // ahora, vamos a comprobar si los caracteres que se han pedido, se pueden mostrar, es decir, si hay suficientes caracteres.
     unsigned int caractdifncia = tam_ - ind;
     if (caractdifncia < tamanno){
-        throw out_of_range("Lo siento, no hay suficientes caracteres.");
+        throw std::out_of_range("Lo siento, no hay suficientes caracteres.");
     }
 
     // creamos una cadena nueva para albergar el resultado.
@@ -178,24 +189,54 @@ Cadena Cadena::substr(size_t ind, size_t tamanno) const {
     return CadNew;
 }
 
-Cadena &Cadena::operator+(const Cadena &c2) {
+Cadena Cadena::operator+(const Cadena &c2) {
 
     // Creamos una nueva cadena con el tamaño de la suma de los tamaños de las dos cadenas + 1 por el carácter terminador.
-    char* CadSum = new char[this->tam_ + c2.tam_ + 1]();
+    char* CadSum = new char[tam_ + c2.tam_ + 1];
 
     // Copiamos la primera cadena en la cadena nueva.
-    strcpy(CadSum, this->s_);
+    strcpy(CadSum, s_);
 
     // Luego, la concatenamos con la segunda cadena.
     strcat(CadSum, c2.s_);
 
-    // Borramos la primera cadena.
-    delete[] s_;
-
-    // y se le asignamos la nueva cadena concatenada.
-    s_ = CadSum;
-
     // por último, devolvemos esa cadena.
-    return *this;
+    return Cadena{CadSum};
 }
 
+Cadena Cadena::operator+(const Cadena &c2) const {
+    // Creamos una nueva cadena con el tamaño de la suma de los tamaños de las dos cadenas + 1 por el carácter terminador.
+    char* CadSum = new char[tam_ + c2.tam_ + 1];
+
+    // Copiamos la primera cadena en la cadena nueva.
+    strcpy(CadSum, s_);
+
+    // Luego, la concatenamos con la segunda cadena.
+    strcat(CadSum, c2.s_);
+
+    // por último, devolvemos esa cadena.
+    return Cadena{CadSum};
+}
+
+Cadena &Cadena::operator=(const char* c2) {
+
+    // Borramos lo que haya en la cadena.
+    delete[] this->s_;
+
+    // ahora, reservamos memoria para la nueva cadena. También indicamos su tamaño.
+    this->tam_ = strlen(c2);
+    this->s_ = new char[tam_ + 1];
+
+    // Copiamos el contenido de c2 en la nueva cadena.
+    strcpy(this->s_, c2);
+    return *this;
+
+}
+
+Cadena::operator const char *() {
+    return s_;
+}
+
+Cadena::operator const char *() const {
+    return s_;
+}

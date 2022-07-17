@@ -5,6 +5,7 @@
 #ifndef P0_FECHA_HPP
 #define P0_FECHA_HPP
 #include <ctime>
+#include <cassert>
 using namespace std;
 
 // Esta función nos permite saber si un año es bisiesto.
@@ -30,17 +31,8 @@ public:
     static const int AnnoMinimo = 1902;
     static const int AnnoMaximo = 2037;
 
-    // clase Inválida, para que lance una excepción si introducimos una fecha errónea.
-    class Invalida{
-    public:
-        Invalida(const char* cadena): fallo(cadena) {}
-        const char * por_que() { return fallo; };
-    private:
-        const char * fallo;
-    };
-
-    // Esta función nos permite hacer la conversión de la fecha en números a una cadena con palabras.
-    const char* cadena() const noexcept;
+    // clase Invalida.
+    class Invalida;
 
     // Funciones para incrementar o decrementar una fecha
     Fecha& operator ++();                   // Preincrementa
@@ -52,6 +44,39 @@ public:
     Fecha& operator +=(int n);
     Fecha& operator -=(int n);
 
+    operator const char*() { return cadena(); };
+    operator const char*() const{ return cadena(); };
+
+    const char* cadena() const noexcept { return obtenercadenita(); };
+    // Esta clase reloj nos sirve para poder dar la fecha del sistema.
+    class reloj{
+    public:
+        static int diaact(){
+            std::time_t tiempo_calendario = std::time(nullptr);
+            std::tm* tiempo_descompuesto = std::localtime(&tiempo_calendario);
+            return tiempo_descompuesto->tm_mday;
+        }
+
+        static int mesact(){
+            std::time_t tiempo_calendario = std::time(nullptr);
+            std::tm* tiempo_descompuesto = std::localtime(&tiempo_calendario);
+            return tiempo_descompuesto->tm_mon + 1;
+        }
+
+        static int annoact(){
+            std::time_t tiempo_calendario = std::time(nullptr);
+            std::tm* tiempo_descompuesto = std::localtime(&tiempo_calendario);
+            return tiempo_descompuesto->tm_year + 1900;
+        }
+    };
+
+    // Operadores para comparar dos fechas.
+    friend bool operator == (const Fecha& f1, const Fecha& f2);
+    friend bool operator != (const Fecha& f1, const Fecha& f2);
+    friend bool operator > (const Fecha& f1, const Fecha& f2);
+    friend bool operator < (const Fecha& f1, const Fecha& f2);
+    friend bool operator >= (const Fecha& f1, const Fecha& f2);
+    friend bool operator <= (const Fecha& f1, const Fecha& f2);
 private:
 
     // día, mes y año, respectivamente.
@@ -64,8 +89,21 @@ private:
     void CorregirFecha(int d, int m, int a);
 
     // vector de los días que tiene cada mes;
-    int DiasQueTieneUnMes[12] = {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    static const int DiasQueTieneUnMes[];
+
+    // Esta función nos permite hacer la conversión de la fecha en números a una cadena con palabras.
+    const char* obtenercadenita() const noexcept;
 };
+
+// clase Inválida, para que lance una excepción si introducimos una fecha errónea.
+class Fecha::Invalida{
+public:
+    Invalida(const char* cadena): fallo(cadena) {}
+    const char* por_que() const { return fallo; };
+private:
+    const char * fallo;
+};
+
 
 // Operadores para comparar dos fechas.
 bool operator == (const Fecha& f1, const Fecha& f2);
@@ -75,27 +113,7 @@ bool operator < (const Fecha& f1, const Fecha& f2);
 bool operator >= (const Fecha& f1, const Fecha& f2);
 bool operator <= (const Fecha& f1, const Fecha& f2);
 
-// Esta clase reloj nos sirve para poder dar la fecha del sistema.
-class reloj{
-public:
-    static int diaact(){
-        std::time_t tiempo_calendario = std::time(nullptr);
-        std::tm* tiempo_descompuesto = std::localtime(&tiempo_calendario);
-        return tiempo_descompuesto->tm_mday;
-    }
 
-    static int mesact(){
-        std::time_t tiempo_calendario = std::time(nullptr);
-        std::tm* tiempo_descompuesto = std::localtime(&tiempo_calendario);
-        return tiempo_descompuesto->tm_mon + 1;
-    }
-
-    static int annoact(){
-        std::time_t tiempo_calendario = std::time(nullptr);
-        std::tm* tiempo_descompuesto = std::localtime(&tiempo_calendario);
-        return tiempo_descompuesto->tm_year + 1900;
-    }
-};
 
 
 #endif //P0_FECHA_HPP
